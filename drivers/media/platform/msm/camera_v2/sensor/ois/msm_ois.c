@@ -1,5 +1,4 @@
 /* Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
- * Copyright (C) 2019 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -509,13 +508,19 @@ static int32_t msm_ois_control(struct msm_ois_ctrl_t *o_ctrl,
 
 #ifndef CONFIG_MACH_XIAOMI_JASON
 		for (i = 0; i < set_info->ois_params.setting_size; i++) {
-			if (set_info->ois_params.settings[i].i2c_operation
-				== MSM_OIS_READ) {
-				set_info->ois_params.settings[i].reg_data =
-					settings[i].reg_data;
+			if (settings[i].i2c_operation == MSM_OIS_READ) {
+				if (copy_to_user(
+					(void __user *)
+					(&set_info->ois_params.settings[i].reg_data),
+					&settings[i].reg_data,
+					sizeof(struct reg_settings_ois_t))) {
+					kfree(settings);
+					pr_err("Error copying\n");
+					return -EFAULT;
+				}
 				CDBG("ois_data at addr 0x%x is 0x%x",
-				set_info->ois_params.settings[i].reg_addr,
-				set_info->ois_params.settings[i].reg_data);
+				settings[i].reg_addr,
+				settings[i].reg_data);
 			}
 		}
 #endif
